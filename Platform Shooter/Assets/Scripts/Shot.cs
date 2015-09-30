@@ -3,6 +3,8 @@ using System.Collections;
 
 public class Shot : MonoBehaviour {
 
+	public GameObject sparks;
+
 	public float speed;
 	public float damage;
 
@@ -19,7 +21,12 @@ public class Shot : MonoBehaviour {
 	void OnCollisionEnter(Collision other){
 		if (other.gameObject.tag == "Enemy") {
 			other.gameObject.SendMessage ("ApplyDamage", damage);
+			damage=0;
+			Debug.Log("Hit " + damage);
 		}
+		Instantiate (sparks, transform.position, Quaternion.Euler (
+			new Vector3(transform.rotation.x, transform.rotation.y+270, transform.rotation.z)));
+
 		Destroy (gameObject);
 	}
 }
