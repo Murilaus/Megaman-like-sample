@@ -42,13 +42,8 @@ public class PlayerController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		float movement = Input.GetAxis ("Horizontal")*speed;
-		if (movement < 0 && direction == 1 || movement > 0 && direction == -1) {
-			Turn ();
-		}
-		if (movement != 0 && !airCollision) {
-			Walk (movement);
-		}
+		SetJump ();
+		Walk ();
 
 		if (Input.GetButton ("Fire1")) {
 			charge += Time.deltaTime;
@@ -66,17 +61,41 @@ public class PlayerController : MonoBehaviour {
 		transform.Rotate (new Vector3 (0, 1, 0), 180);
 	}
 	
-	void Walk (float movement){
-		if (Input.GetButtonDown ("Jump")) {
-			jumping =true;
+	void Walk (){
+		float movement = Input.GetAxis ("Horizontal")*speed;
+		if (movement < 0 && direction == 1 || movement > 0 && direction == -1) {
+			Turn ();
 		}
-		rb.velocity = new Vector3(movement, rb.velocity.y, 0);
+		if (movement != 0 && !airCollision) {
+			rb.velocity = new Vector3(movement, rb.velocity.y, 0);
+		}
 	}
 
 	void Jump(){
 
-		if (Input.GetButtonDown ("Jump") && grounded) {
+		if (canJump) {
+			if(Input.GetButtonDown ("Jump")){
+				jumping = true;
+			}
+			if(Input.GetButtonUp ("Jump") || timeJumping >= maxJump){
+				jumping = false;
+				canJump = false;
+			}
+
+			if(jumping){
+				timeJumping += Time.deltaTime;
+				rb.velocity = new Vector3 (rb.velocity.x, jumpIntensity+Mathf.Pow (1+timeJumping, 4), 0);
+			}
+		}
+
+
+
+
+		/*if (Input.GetButtonDown ("Jump") && grounded) {
 			jumping = true;
+		}
+		if (Input.GetButtonUp ("Jump")) {
+			jumping = false;
 		}
 
 		if (Input.GetButton ("Jump") && jumping && timeJumping < maxJump) {
@@ -84,7 +103,7 @@ public class PlayerController : MonoBehaviour {
 			rb.velocity = new Vector3 (rb.velocity.x, jumpIntensity+Mathf.Pow (1+timeJumping, 4), 0);
 		}else{
 			jumping = false;
-		}
+		}*/
 	}
 
 	void OnCollisionStay(Collision info){
@@ -122,10 +141,16 @@ public class PlayerController : MonoBehaviour {
 		if(Physics.Raycast (frontalRaycast.transform.position, new Vector3(0, -1, 0), raycastDown) || 
 			Physics.Raycast (backRaycast.transform.position, new Vector3(0, -1, 0), raycastDown)){
 				grounded = true;
-				timeJumping = 0;
 		}
 		else{
 			grounded = false;
+		}
+	}
+
+	void SetJump(){
+		if (grounded && !jumping) {
+			canJump = true;
+			timeJumping = 0;
 		}
 	}
 }
