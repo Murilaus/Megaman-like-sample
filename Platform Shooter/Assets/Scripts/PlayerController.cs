@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PlayerController : MonoBehaviour {
+	
+	public Slider healthSlider;
 
 	public GameObject shot;
 	public GameObject chargedShot;
+	public GameObject chargeParticles;
 	public float charge;
 	public float shotCharge;
 	public GameObject shotPoint;
@@ -12,7 +16,9 @@ public class PlayerController : MonoBehaviour {
 
 	public float health;
 	public float currentHealth;
+	public float currentSpeed;
 	public float speed;
+	public float acceleration;
 	public float direction;
 
 	public GameObject frontalRaycast;
@@ -34,26 +40,30 @@ public class PlayerController : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		healthSlider.maxValue = health;
+		currentHealth = health;
+		healthSlider.value = currentHealth;
 		charge = 0;
 		timeJumping = 0;
 		direction = 1;
 		rb = this.GetComponent<Rigidbody>();
+		chargeParticles.SetActive(false);
+		currentSpeed = speed;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		SetJump ();
-		Walk ();
-
-		if (Input.GetButton ("Fire1")) {
-			charge += Time.deltaTime;
-		}
-		if (Input.GetButtonUp ("Fire1")) {
-			Shoot(charge);
-			charge = 0;
-		}
+		UpdateHealth();
+		Shot ();
 		Jump ();
 		CheckGround ();
+
+		Debug.Log ("Speed: " + rb.velocity.x);
+	}
+
+	void FixedUpdate(){
+		Walk ();
 	}
 	
 	void Turn(){
@@ -62,12 +72,18 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	void Walk (){
-		float movement = Input.GetAxis ("Horizontal")*speed;
+		float movement = Input.GetAxis ("Horizontal")*currentSpeed;
 		if (movement < 0 && direction == 1 || movement > 0 && direction == -1) {
 			Turn ();
 		}
-		if (movement != 0 && !airCollision) {
+		if (movement != 0/* && !airCollision*/) {
 			rb.velocity = new Vector3(movement, rb.velocity.y, 0);
+		}
+	}
+
+	void UpdateHealth(){
+		if (healthSlider.value > currentHealth) {
+			healthSlider.value -= 10 * Time.deltaTime;
 		}
 	}
 
@@ -88,9 +104,6 @@ public class PlayerController : MonoBehaviour {
 			}
 		}
 
-
-
-
 		/*if (Input.GetButtonDown ("Jump") && grounded) {
 			jumping = true;
 		}
@@ -106,19 +119,38 @@ public class PlayerController : MonoBehaviour {
 		}*/
 	}
 
+	void Shot(){
+		if (charge >= shotCharge) {
+			chargeParticles.SetActive(true);
+		} else {
+			chargeParticles.SetActive(false);
+		}
+		
+		if (Input.GetButton ("Fire1")) {
+			charge += Time.deltaTime;
+		}
+		if (Input.GetButtonUp ("Fire1")) {
+			DoShoot(charge);
+			charge = 0;
+		}
+	}
+
 	void OnCollisionStay(Collision info){
 		if (!grounded) {
 			airCollision = true;
+			currentSpeed = 0.1f;
 		} else {
 			airCollision = false;
+			currentSpeed = speed;
 		}
 	}
 
 	void OnCollisionExit(Collision info){
 		airCollision = false;
+		currentSpeed = speed;
 	}
 
-	void Shoot(float charge){
+	void DoShoot(float charge){
 		if (charge >= shotCharge) {
 			Instantiate (chargedShot, shotPoint.transform.position, shotPoint.transform.rotation);
 		} else {
@@ -128,6 +160,7 @@ public class PlayerController : MonoBehaviour {
 
 	void ApplyDamage(float damage){
 		currentHealth -= damage;
+		//healthSlider.value = currentHealth;
 		if (currentHealth <= 0) {
 			Die ();
 		}

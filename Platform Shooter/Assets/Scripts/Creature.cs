@@ -1,9 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+
+[RequireComponent (typeof(Rigidbody))]
 public class Creature: MonoBehaviour{
 
-	public GameObject shot;
+	public float maxHealth;
+	public float currentHealth;
+	public float maxSpeed;
+	public float currentSpeed;
+	public float damage;
+	public float jumpIntensity;
+	public int direction;
+	public int acceleration;
+
+	public bool grounded;
+	public float raycastDown;
+	public float couldown;
+
+	/*public GameObject shot;
 	public float shotCharge;
 	public GameObject shotPoint;
 	public float health;
@@ -20,6 +35,10 @@ public class Creature: MonoBehaviour{
 			Die ();
 		}
 	}
+	*/
+	public void Move(Vector3 movement){
+		if(
+	}
 
 	public void ApplyDamage(float damage){
 		currentHealth -= damage;
@@ -29,9 +48,9 @@ public class Creature: MonoBehaviour{
 		Destroy (gameObject);
 	}
 
-	void OnCollisionEnter(Collision other){
+	/*void OnCollisionEnter(Collision other){
 		if (other.gameObject.tag == "Player") {
 			other.gameObject.SendMessage ("ApplyDamage", damage);
 		}
-	}
+	}*/
 }
